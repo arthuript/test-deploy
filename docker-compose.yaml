@@ -1,5 +1,32 @@
 services:
-  adapter:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - ibira-network
+  db:
+    container_name: resource-cataloguer-db
+    image: postgres:17.0
+    restart: always
+    environment:
+      POSTGRES_USER: 'ibira-cataloger'
+      POSTGRES_PASSWORD: 'admin'
+      POSTGRES_DB: 'catalog'
+    volumes:
+      - ./models/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - 5432:5432
+
+  ibirapitanga-resource-adapter:
+    image: rabbitmq:3-management
+    container_name: resource-adater
     ports:
       - "8084:8080"
     restart: always
@@ -11,18 +38,23 @@ services:
     networks:
       - app-network
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
+  ibirapitanga-resource-cataloger:
+    image: ibirapitanga-resource-cataloger:latest
+    build: .
+    restart: always
+    depends_on:
+      - 'db'
     environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
-    networks:
-      - app-network
+      DATABASE_URL: postgresql://ibira-cataloger:admin@resource-cataloguer-db:5432/catalog
+      POSTGRES_USER: 'cataloger'
+      POSTGRES_PASSWORD: 'admin'
+      POSTGRES_HOST: 'resource-cataloguer-db'
+      POSTGRES_PORT: 5432
+      RABBITMQ_HOST: 'rabbitmq'
+      KONG_URI: 'http://kong:8001'
+    ports:
+      - 8080:8080
 
 networks:
-  app-network:
+  ibira-network:
     driver: bridge
