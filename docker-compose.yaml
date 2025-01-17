@@ -11,7 +11,8 @@ services:
       - RABBITMQ_DEFAULT_PASS=guest
     networks:
       - ibira-network
-  db:
+  
+  postgresql:
     container_name: resource-cataloguer-db
     image: postgres:17.0
     restart: always
@@ -23,6 +24,28 @@ services:
       - ./models/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 5432:5432
+      
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - ibira-network
+
+  ibirapitanga-data-collector:
+    container_name: data-collector
+    image: test-collector-datacollector
+    ports:
+      - "8080:8080"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017
+    depends_on:
+      - mongo
+    networks:
+      - intercity-network
 
   ibirapitanga-resource-adaptor:
     image: ghcr.io/iptsp/ibirapitanga-resource-adaptor:latest
@@ -40,10 +63,11 @@ services:
 
   ibirapitanga-resource-cataloger:
     image: ghcr.io/iptsp/ibirapitanga-resource-cataloger:latest
+    container_name: resource-cataloger
     build: .
     restart: always
     depends_on:
-      - 'db'
+      - 'postgresql'
     environment:
       DATABASE_URL: postgresql://ibira-cataloger:admin@resource-cataloguer-db:5432/catalog
       POSTGRES_USER: 'cataloger'
@@ -58,3 +82,5 @@ services:
 networks:
   ibira-network:
     driver: bridge
+volumes:
+  mongo-data:
