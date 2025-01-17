@@ -59,7 +59,7 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
     networks:
-      - app-network
+      - ibira-network
 
   ibirapitanga-resource-cataloger:
     image: ghcr.io/iptsp/ibirapitanga-resource-cataloger:latest
