@@ -45,7 +45,7 @@ services:
     depends_on:
       - mongo
     networks:
-      - intercity-network
+      - ibira-network
 
   ibirapitanga-resource-adaptor:
     image: ghcr.io/iptsp/ibirapitanga-resource-adaptor:latest
