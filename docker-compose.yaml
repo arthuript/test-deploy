@@ -24,8 +24,8 @@ services:
     ports:
       - 5432:5432
 
-  ibirapitanga-resource-adapter:
-    image: rabbitmq:3-management
+  ibirapitanga-resource-adaptor:
+    image: ghcr.io/iptsp/ibirapitanga-resource-adaptor:latest
     container_name: resource-adater
     ports:
       - "8084:8080"
@@ -39,7 +39,7 @@ services:
       - app-network
 
   ibirapitanga-resource-cataloger:
-    image: ibirapitanga-resource-cataloger:latest
+    image: ghcr.io/iptsp/ibirapitanga-resource-cataloger:latest
     build: .
     restart: always
     depends_on:
